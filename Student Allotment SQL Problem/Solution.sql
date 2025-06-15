@@ -64,14 +64,8 @@ BEGIN
     DROP TABLE #SortedStudents;
 END;
 
-
-
 EXEC AllocateElectives;
 
-
 SELECT * FROM Allotments;
-
-
-
 -- Check UnallotedStudents
 SELECT * FROM UnallotedStudents;
