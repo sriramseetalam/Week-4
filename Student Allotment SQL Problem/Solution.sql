@@ -3,19 +3,16 @@ AS
 BEGIN
     DECLARE @StudentId INT, @SubjectId NVARCHAR(50), @Preference INT, @GPA FLOAT;
 
-    -- Temporary table to hold sorted students
     CREATE TABLE #SortedStudents (
         StudentId INT,
         GPA FLOAT
     );
 
-    -- Insert students sorted by GPA
     INSERT INTO #SortedStudents (StudentId, GPA)
     SELECT StudentId, GPA
     FROM StudentDetails
     ORDER BY GPA DESC;
 
-    -- Cursor to iterate over each student
     DECLARE student_cursor CURSOR FOR
     SELECT StudentId, GPA
     FROM #SortedStudents;
@@ -27,7 +24,6 @@ BEGIN
     BEGIN
         DECLARE @Allotted BIT = 0;
         
-        -- Cursor to iterate over each student's preferences
         DECLARE preference_cursor CURSOR FOR
         SELECT SubjectId, Preference
         FROM StudentPreference
@@ -39,13 +35,10 @@ BEGIN
 
         WHILE @@FETCH_STATUS = 0 AND @Allotted = 0
         BEGIN
-            -- Check if the subject has available seats
             IF EXISTS (SELECT 1 FROM SubjectDetails WHERE SubjectId = @SubjectId AND RemainingSeats > 0)
             BEGIN
-                -- Allocate the subject to the student
                 INSERT INTO Allotments (SubjectId, StudentId) VALUES (@SubjectId, @StudentId);
 
-                -- Decrement the remaining seats for the subject
                 UPDATE SubjectDetails SET RemainingSeats = RemainingSeats - 1 WHERE SubjectId = @SubjectId;
 
                 SET @Allotted = 1;
@@ -57,7 +50,6 @@ BEGIN
         CLOSE preference_cursor;
         DEALLOCATE preference_cursor;
 
-        -- If student was not allotted any subject
         IF @Allotted = 0
         BEGIN
             INSERT INTO UnallotedStudents (StudentId) VALUES (@StudentId);
@@ -69,7 +61,6 @@ BEGIN
     CLOSE student_cursor;
     DEALLOCATE student_cursor;
 
-    -- Drop the temporary table
     DROP TABLE #SortedStudents;
 END;
 
@@ -78,8 +69,9 @@ END;
 EXEC AllocateElectives;
 
 
--- Check Allotments
 SELECT * FROM Allotments;
+
+
 
 -- Check UnallotedStudents
 SELECT * FROM UnallotedStudents;
